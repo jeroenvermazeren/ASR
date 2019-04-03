@@ -4,7 +4,6 @@ import pickle
 import numpy as np
 
 import segmentation
-import cnn
 import soundfile
 from tensorflow import keras
 # from keras.optimizers import Adam
@@ -41,13 +40,13 @@ class Main():
 
         # stamp = seg.wav_to_stamp('num','six','phone_en-UK-m-Martin00.wav')
 
-        self.create_dataset_from_folders('num')
+        self.segmentation.create_dataset_from_folders('num')
 
-        self.create_dataset_from_adhoc_wavs('num' + '-test')
+        self.segmentation.create_dataset_from_adhoc_wavs('num' + '-test')
 
 
-    def network(self):
-        network = cnn.build_network()
+    def run_network(self):
+        network = self.network.build_network()
 
         loss_function = 'categorical_crossentropy'
         optimizer = keras.optimizers.Adam(lr = 0.001)
@@ -61,12 +60,12 @@ class Main():
         check_indices = [i for i, r in enumerate(dataset['rand']) if r > 0.9]
 
 
-        ds_train = cnn.make_dataset(dataset, train_indices,n_epochs = cnn.n_epochs, batch_size=cnn.batch_size, seed=100)  # shuffles...
-        ds_check = cnn.make_dataset(dataset, check_indices,n_epochs=cnn.n_epochs, batch_size=1)
+        ds_train = self.network.make_dataset(dataset, train_indices,n_epochs = self.network.n_epochs, batch_size=self.network.batch_size, seed=100)  # shuffles...
+        ds_check = self.network.make_dataset(dataset, check_indices,n_epochs=self.network.n_epochs, batch_size=1)
 
-        spe = len(train_indices) // cnn.batch_size
+        spe = len(train_indices) // self.network.batch_size
 
-        network.fit(ds_train, steps_per_epoch=spe, epochs=cnn.n_epochs,
+        network.fit(ds_train, steps_per_epoch=spe, epochs=self.network.n_epochs,
                   validation_data=ds_check, validation_steps=len(check_indices),
                   verbose=1)
 
@@ -75,7 +74,7 @@ class Main():
 
     def main(self):
         self.preprocessing()
-        self.network()
+        self.run_network()
 
 
 
