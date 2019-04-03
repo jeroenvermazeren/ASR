@@ -98,6 +98,9 @@ class Main():
         f = './data/num-test/Martin-Digits.wav'
         self.segmentation.show_spectogram(f)
 
+        f = './data/num-test/test.wav'
+        self.segmentation.show_spectogram(f)
+
         self.preprocessing()
         model = self.run_network()
         dataset_test = pickle.load(open(os.path.join('data',self.prefix +
