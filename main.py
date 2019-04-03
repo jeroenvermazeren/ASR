@@ -25,15 +25,15 @@ class Main():
     def preprocessing(self):
         f = './data/raw-from-phone.wav'
 
-        samples, sample_rate = soundfile.read(f)
-
-        self.segmentation.show_waveform(samples, sample_rate)
+        # samples, sample_rate = soundfile.read(f)
+        #
+        # self.segmentation.show_waveform(samples, sample_rate)
 
         # audio_playback_widget(f) unable because IPython
 
         f = './data/num_phone_en-UK_m_Martin00.wav'
 
-        self.segmentation.show_spectogram(f)
+        # self.segmentation.show_spectogram(f)
 
         self.segmentation.split_combined_file_into_wavs('./data/num_Bing_en-UK_f_Susan.wav')
         self.segmentation.split_all_combined_files_into_wavs()
@@ -71,14 +71,50 @@ class Main():
 
         score = network.evaluate(ds_check,steps=len(check_indices),verbose=1)
         print("Score = ", score)
+        return network
+
+
+    def show_heat_map(self, heat_map, yticks=None):
+        fig, ax = plt.subplots()
+        ax.xaxis.tick_top()
+        plt.imshow(heat_map, interpolation='nearest',cmap=plt.cm.Blues, aspect = 'auto')
+        plt.xticks( range(10))
+        if yticks:
+            plt.yticks(range(len(heat_map)), yticks)
+        else:
+            plt.yticks(range(len(heat_map)))
+        plt.show()
+
 
     def main(self):
+
+        f = './data/num-test/Franka-Digits.wav'
+        self.segmentation.show_spectogram(f)
+
+        f = './data/num-test/Franka-Digits-1.wav'
+        self.segmentation.show_spectogram(f)
+
+
+        f = './data/num-test/Martin-Digits.wav'
+        self.segmentation.show_spectogram(f)
+
         self.preprocessing()
-        self.run_network()
+        model = self.run_network()
+        dataset_test = pickle.load(open(os.path.join('data',self.prefix +
+                                         '-test.pkl'),'rb'))
+        predictions =  self.network.get_predictions_for_dataset(dataset_test, model)
 
+        for i, prediction in enumerate(predictions):
+            probs = ','.join(["%6.2f%%" % (p * 100,) for p in prediction['probabilities']])
+            print("%s == %d  p=[%s]" % (dataset_test['words'][i], prediction['classes'], probs,))
 
+        heat_map = [prediction['probabilities'] for prediction in predictions]
+
+        self.show_heat_map(heat_map)
 
 
 if __name__ == "__main__":
     main = Main(Segmentation(), Network())
     main.main()
+
+

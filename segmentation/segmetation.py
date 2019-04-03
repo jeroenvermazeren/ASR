@@ -77,7 +77,7 @@ class Segmentation:
         # log_e = smooth(log_e)
         # if plot: plt.plot(log_e)
 
-        log_e_hurdle = (log_e.max() - log_e.min()) * 0.25 + log_e.min()
+        log_e_hurdle = (log_e.max() - log_e.min()) * 0.5 + log_e.min()
 
         log_e_crop = np.where(log_e > log_e_hurdle, 1.0, 0.0)
         if plot: plt.plot(log_e_crop * 25 - 2.5)
@@ -189,9 +189,11 @@ class Segmentation:
             if not (ext == '.wav' or ext == '.ogg'): continue
 
             samples, sample_rate = soundfile.read(os.path.join('data', prefix, audio_file))
+            print("Sample_rate = ", sample_rate)
+            print("samples = ", samples)
             sample_feat, energy = self.get_sample_features(samples, sample_rate)
             word_ranges = self.get_sample_isolated_words(energy, plot=False)
-
+            print("word_ranges = ", word_ranges)
             for i, wr in enumerate(word_ranges):
                 wr = word_ranges[i]
                 fac = int(self.sample_window_step * sample_rate)
@@ -228,7 +230,7 @@ class Segmentation:
 
         print("Y.shape=", Y.shape)
 
-        Y_crop = np.where(Y > 0.25, 1.0, 0.0)
+        Y_crop = np.where(Y > 0.50, 1.0, 0.0)
 
         # Apply some smoothing
         Y_crop = self.smooth(Y_crop)
@@ -238,6 +240,7 @@ class Segmentation:
 
         plt.figure(figsize=(12, 3))
         plt.imshow(X.T, interpolation='nearest', origin='lower', aspect='auto')
+        plt.title(f)
         plt.xlim(xmin=0)
         plt.ylim(ymin=0)
 

@@ -12,6 +12,7 @@ class Network:
         self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.input_shape = input_shape
+        self.network = None
 
     def build_network(self):
         ## DEFINE THE ABOVE DESCRIBED MODEL HERE
@@ -31,9 +32,10 @@ class Network:
         x = keras.layers.Dense(self.n_classes, activation='softmax')(x)
 
         x_out = x  # this is the output fo your network, used later on in this notebook
-        network = keras.Model(inputs=x_in, outputs=x_out)
+        self.network = keras.Model(inputs=x_in, outputs=x_out)
 
-        return network
+        return self.network
+
 
     # Create Dataset iterator
 
@@ -60,3 +62,23 @@ class Network:
         ds = ds.repeat(n_epochs).batch(batch_size)
 
         return ds
+
+    def get_predictions_for_dataset(self, data, network):
+        n_points = len(data['stamp'])
+        ds = self.make_dataset(data, range(n_points), n_epochs=1, batch_size=1)
+
+        pred_arr = network.predict(ds, steps=n_points, verbose=0)
+        # print("This is an array of predictions, each with n_classes of probs:\n",pred_arr)  # This is an array of predictions, each with n_classes of probs
+
+        predictions = [dict(classes=i, probabilities=p, logits=np.log(p + 1e-20))
+                       for i, p in enumerate(pred_arr)]
+
+        for i, p in enumerate(predictions):
+            label = int(data['label'][i])
+            if label >= 0:
+                p['word'] = data['words'][label]
+            else:
+                p['word'] = data['words'][i]
+            p['label'] = label
+
+        return predictions
